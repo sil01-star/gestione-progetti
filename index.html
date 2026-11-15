@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172554">
+  <meta name="description" content="Project Compass: gestione offline di progetti, problemi, soluzioni e task.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+  <title>Project Compass</title>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">PROJECT & PROBLEM MANAGEMENT</p>
+      <h1>Project Compass</h1>
+    </div>
+    <button id="installBtn" class="button button-quiet hidden" type="button">Installa</button>
+  </header>
+
+  <main class="shell">
+    <section class="summary-grid" aria-label="Riepilogo">
+      <article class="metric"><span>Progetti</span><strong id="metricProjects">0</strong></article>
+      <article class="metric"><span>Problemi aperti</span><strong id="metricProblems">0</strong></article>
+      <article class="metric"><span>Task in corso</span><strong id="metricTasks">0</strong></article>
+    </section>
+
+    <nav class="tabs" aria-label="Sezioni">
+      <button class="tab active" data-view="projects">Progetti</button>
+      <button class="tab" data-view="problems">Problemi</button>
+      <button class="tab" data-view="insights">Analisi AI</button>
+      <button class="tab" data-view="data">Dati</button>
+    </nav>
+
+    <section id="view-projects" class="view">
+      <div class="section-heading">
+        <div><p class="eyebrow">PORTFOLIO</p><h2>I tuoi progetti</h2></div>
+        <button id="addProjectBtn" class="button button-primary">+ Progetto</button>
+      </div>
+      <div id="projectsList" class="card-list"></div>
+      <div id="emptyProjects" class="empty-state">Nessun progetto. Crea il primo per iniziare.</div>
+    </section>
+
+    <section id="view-problems" class="view hidden">
+      <div class="section-heading">
+        <div><p class="eyebrow">ISSUE REGISTER</p><h2>Registro problemi</h2></div>
+        <button id="addProblemBtn" class="button button-primary">+ Problema</button>
+      </div>
+      <div class="filters">
+        <select id="projectFilter" aria-label="Filtra per progetto"><option value="">Tutti i progetti</option></select>
+        <select id="typeFilter" aria-label="Filtra per tipologia"><option value="">Tutte le tipologie</option></select>
+      </div>
+      <div id="problemsList" class="card-list"></div>
+      <div id="emptyProblems" class="empty-state">Nessun problema registrato.</div>
+    </section>
+
+    <section id="view-insights" class="view hidden">
+      <div class="section-heading">
+        <div><p class="eyebrow">KNOWLEDGE & RECOMMENDATIONS</p><h2>Analisi e suggerimenti</h2></div>
+      </div>
+      <div class="notice"><strong>Modalità offline attiva.</strong> I suggerimenti qui sotto sono generati da regole e conoscenza locale, non da un modello generativo. L'integrazione AI cloud è predisposta come evoluzione opzionale, ma non invia dati.</div>
+      <div id="insightsList" class="card-list"></div>
+    </section>
+
+    <section id="view-data" class="view hidden">
+      <div class="section-heading"><div><p class="eyebrow">PORTABILITÀ</p><h2>Dati locali</h2></div></div>
+      <article class="panel">
+        <h3>Backup e ripristino</h3>
+        <p>I dati sono salvati nel database del browser su questo dispositivo. Esporta regolarmente un backup JSON: cancellare i dati del browser può eliminarli.</p>
+        <div class="button-row">
+          <button id="exportBtn" class="button button-primary">Esporta backup</button>
+          <label class="button button-secondary file-button">Importa backup<input id="importInput" type="file" accept="application/json,.json"></label>
+        </div>
+      </article>
+      <article class="panel">
+        <h3>Stato dell'app</h3>
+        <p id="connectionStatus">Verifica connessione…</p>
+        <p id="storageStatus" class="muted"></p>
+      </article>
+      <article class="panel">
+        <h3>Modello AI cloud</h3>
+        <p>Non configurato. In futuro potremo aggiungere un servizio opzionale tramite un backend sicuro. Non inserire chiavi API in questa applicazione client.</p>
+        <span class="tag">Disattivato · nessun dato trasmesso</span>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="projectDialog" class="modal">
+    <form id="projectForm" method="dialog">
+      <div class="modal-heading"><h2>Nuovo progetto</h2><button class="icon-button" value="cancel" aria-label="Chiudi">×</button></div>
+      <label>Nome progetto<input name="name" required maxlength="100" placeholder="Es. Migrazione CRM"></label>
+      <label>Descrizione<textarea name="description" rows="3" placeholder="Obiettivo e contesto"></textarea></label>
+      <label>Responsabile<input name="owner" maxlength="100" placeholder="Nome responsabile"></label>
+      <div class="modal-actions"><button class="button button-secondary" value="cancel">Annulla</button><button id="saveProjectBtn" class="button button-primary" value="default">Salva progetto</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="problemDialog" class="modal">
+    <form id="problemForm" method="dialog">
+      <div class="modal-heading"><h2>Nuovo problema</h2><button class="icon-button" value="cancel" aria-label="Chiudi">×</button></div>
+      <label>Progetto<select name="projectId" id="problemProject" required></select></label>
+      <label>Titolo<input name="title" required maxlength="140" placeholder="Descrivi il problema in una frase"></label>
+      <label>Descrizione<textarea name="description" rows="3" placeholder="Contesto, evidenze e conseguenze"></textarea></label>
+      <label>Stakeholder<input name="stakeholder" maxlength="120" placeholder="Nome, ruolo o gruppo"></label>
+      <label>Tipologia<select name="typeId" id="problemType" required></select></label>
+      <div class="form-grid">
+        <label>Priorità<select name="priority"><option>Media</option><option>Alta</option><option>Bassa</option><option>Critica</option></select></label>
+        <label>Stato<select name="status"><option value="open">Aperto</option><option value="monitoring">In monitoraggio</option><option value="resolved">Risolto</option></select></label>
+      </div>
+      <div class="modal-actions"><button class="button button-secondary" value="cancel">Annulla</button><button class="button button-primary" value="default">Salva problema</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="detailDialog" class="modal modal-wide">
+    <div id="detailContent"></div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
